@@ -12,7 +12,7 @@
     :root { --ink:#18201d; --muted:#6e766f; --paper:#f6f2eb; --card:#fffdf9; --line:#ded9ce; --sage:#dce9d5; --green:#255c3d; --coral:#efc9b8; --red:#9b3c2e; --yellow:#f7df8b; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100dvh; background:var(--paper); color:var(--ink); font:16px/1.45 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    button,input { font:inherit; }
+    button,input,textarea { font:inherit; }
     button { cursor:pointer; -webkit-tap-highlight-color:transparent; }
     .app { width:min(100%, 560px); min-height:100dvh; margin:auto; padding:max(24px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom)); display:flex; flex-direction:column; }
     header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
@@ -56,8 +56,14 @@
     .modal h2 { margin:0; font-size:24px; letter-spacing:-.8px; }
     .close { border:0; background:none; font-size:29px; color:var(--muted); padding:0 4px; }
     label { display:block; margin:15px 0 7px; font-size:14px; font-weight:750; }
-    input { width:100%; padding:14px 15px; border:1px solid var(--line); border-radius:13px; outline:none; background:#fff; color:var(--ink); }
-    input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(37,92,61,.13); }
+    input,textarea { width:100%; padding:14px 15px; border:1px solid var(--line); border-radius:13px; outline:none; background:#fff; color:var(--ink); }
+    textarea { min-height:185px; resize:vertical; line-height:1.45; }
+    input:focus,textarea:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(37,92,61,.13); }
+    .add-modes { display:flex; gap:7px; margin:-2px 0 15px; }
+    .add-mode { border:0; border-radius:10px; padding:8px 11px; background:#eee9df; color:var(--muted); font-size:13px; font-weight:750; }
+    .add-mode.active { background:var(--sage); color:var(--green); }
+    .helper { margin:7px 0 0; color:var(--muted); font-size:13px; }
+    .batch-error { min-height:19px; margin:8px 0 0; color:var(--red); font-size:13px; font-weight:700; }
     .form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:23px; }
     .secondary { padding:12px 15px; border:1px solid var(--line); border-radius:12px; background:white; font-weight:700; }
     .primary { margin:0; padding:12px 17px; }
@@ -85,7 +91,7 @@
     <div class="footer"><button class="secondary" id="manageButton">Manage words <span id="archiveCount"></span></button></div>
   </div>
 
-  <dialog id="addDialog"><form class="modal" id="addForm"><div class="modal-header"><h2>Add a word</h2><button class="close" type="button" data-close="addDialog">×</button></div><label for="polishInput">Polish word</label><input id="polishInput" required autocomplete="off" placeholder="e.g. książka" /><label for="germanInput">German translation</label><input id="germanInput" required autocomplete="off" placeholder="e.g. das Buch" /><div class="form-actions"><button class="secondary" type="button" data-close="addDialog">Cancel</button><button class="primary" type="submit">Add card</button></div></form></dialog>
+  <dialog id="addDialog"><form class="modal" id="addForm"><div class="modal-header"><h2>Add words</h2><button class="close" type="button" data-close="addDialog">×</button></div><div class="add-modes"><button class="add-mode active" type="button" data-add-mode="single">One card</button><button class="add-mode" type="button" data-add-mode="batch">Paste a list</button></div><div id="singleFields"><label for="polishInput">Polish word or sentence</label><input id="polishInput" required autocomplete="off" placeholder="e.g. książka" /><label for="germanInput">German translation</label><input id="germanInput" required autocomplete="off" placeholder="e.g. das Buch" /></div><div id="batchFields" hidden><label for="batchInput">Word pairs</label><textarea id="batchInput" disabled spellcheck="false" placeholder="książka | das Buch\nDzisiaj jest zimno. | Heute ist es kalt.\nChcę nauczyć się niemieckiego. | Ich möchte Deutsch lernen."></textarea><p class="helper">One pair per line. Put a <strong>|</strong> between Polish and German. Phrases and full sentences work too.</p><p class="batch-error" id="batchError" aria-live="polite"></p></div><div class="form-actions"><button class="secondary" type="button" data-close="addDialog">Cancel</button><button class="primary" type="submit" id="addSubmit">Add card</button></div></form></dialog>
   <dialog id="manageDialog"><div class="modal"><div class="modal-header"><h2>Your words</h2><button class="close" type="button" data-close="manageDialog">×</button></div><div class="tabs"><button class="tab active" data-list="active">Learning</button><button class="tab" data-list="archived">Archived</button></div><div class="manage-list" id="manageList"></div></div></dialog>
   <script>
     const KEY = 'wortschatz-cards-v1';
@@ -121,10 +127,14 @@
       $('manageList').innerHTML = selected.length ? selected.map(c => `<div class="manage-item"><div class="pair"><strong>${escapeHtml(c.polish)}</strong><span>${escapeHtml(c.german)} · ${c.known}/10 known</span></div><button class="delete" data-delete="${c.id}">Delete</button></div>`).join('') : `<p style="color:var(--muted);text-align:center;padding:25px 0">No ${listMode} cards yet.</p>`;
       document.querySelectorAll('[data-delete]').forEach(b => b.onclick = () => { cards = cards.filter(c => c.id !== b.dataset.delete); save(); renderList(); render(); });
     }
-    $('addButton').onclick = () => $('addDialog').showModal(); $('emptyAdd').onclick = () => $('addDialog').showModal();
+    let addMode = 'single';
+    function setAddMode(mode) { addMode = mode; const batch = mode === 'batch'; $('singleFields').hidden = batch; $('batchFields').hidden = !batch; $('polishInput').disabled = batch; $('germanInput').disabled = batch; $('batchInput').disabled = !batch; $('addSubmit').textContent = batch ? 'Add cards' : 'Add card'; $('batchError').textContent = ''; document.querySelectorAll('[data-add-mode]').forEach(b => b.classList.toggle('active', b.dataset.addMode === mode)); }
+    function openAddDialog() { setAddMode('single'); $('addDialog').showModal(); }
+    $('addButton').onclick = openAddDialog; $('emptyAdd').onclick = openAddDialog;
     $('manageButton').onclick = () => { listMode = 'active'; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.list === listMode)); renderList(); $('manageDialog').showModal(); };
     document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).close());
-    $('addForm').onsubmit = e => { e.preventDefault(); cards.push({id:crypto.randomUUID(), polish:$('polishInput').value.trim(), german:$('germanInput').value.trim(), known:0, archived:false}); save(); currentIndex = activeCards().length - 1; e.target.reset(); $('addDialog').close(); render(); };
+    document.querySelectorAll('[data-add-mode]').forEach(b => b.onclick = () => setAddMode(b.dataset.addMode));
+    $('addForm').onsubmit = e => { e.preventDefault(); let additions; if (addMode === 'single') additions = [{polish:$('polishInput').value.trim(), german:$('germanInput').value.trim()}]; else { const invalid = []; additions = $('batchInput').value.split(/\r?\n/).map((line, i) => { const cut = line.indexOf('|'); const pair = cut < 0 ? null : {polish:line.slice(0,cut).trim(), german:line.slice(cut+1).trim()}; if (line.trim() && (!pair || !pair.polish || !pair.german)) invalid.push(i + 1); return pair; }).filter(Boolean); if (invalid.length) { $('batchError').textContent = `Check line${invalid.length > 1 ? 's' : ''} ${invalid.join(', ')} — each needs Polish | German.`; return; } if (!additions.length) return; } cards.push(...additions.map(pair => ({id:crypto.randomUUID(), ...pair, known:0, archived:false}))); save(); currentIndex = activeCards().length - 1; e.target.reset(); setAddMode('single'); $('addDialog').close(); render(); };
     $('card').onclick = () => $('card').classList.toggle('flipped'); $('card').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('card').classList.toggle('flipped'); } }; $('againButton').onclick = () => answer(false); $('knowButton').onclick = () => answer(true);
     document.querySelectorAll('.tab').forEach(t => t.onclick = () => { listMode = t.dataset.list; document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t)); renderList(); });
     render();
