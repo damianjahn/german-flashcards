@@ -120,7 +120,14 @@
       const c = active[currentIndex];
       if (known) { c.known++; if (c.known >= 10) c.archived = true; }
       else c.known = Math.max(0, c.known - 1);
-      save(); render();
+      save();
+      const remaining = activeCards();
+      if (remaining.length < 2) currentIndex = 0;
+      else {
+        const choices = remaining.map((card, index) => ({card, index})).filter(item => item.card.id !== c.id);
+        currentIndex = choices[Math.floor(Math.random() * choices.length)].index;
+      }
+      render();
     }
     function renderList() {
       const selected = cards.filter(c => listMode === 'archived' ? c.archived : !c.archived);
