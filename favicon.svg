@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="German flag">
+  <rect width="180" height="180" rx="40" fill="#f4f0e8"/>
+  <g clip-path="url(#clip)">
+    <rect x="25" y="37" width="130" height="36" fill="#1c211f"/>
+    <rect x="25" y="73" width="130" height="36" fill="#d43c32"/>
+    <rect x="25" y="109" width="130" height="36" fill="#f1c844"/>
+  </g>
+  <rect x="25" y="37" width="130" height="108" rx="13" fill="none" stroke="#ded9ce" stroke-width="4"/>
+  <defs><clipPath id="clip"><rect x="25" y="37" width="130" height="108" rx="13"/></clipPath></defs>
+</svg>
