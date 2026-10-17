@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f6f2eb" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="apple-touch-icon" href="favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Wortschatz" />
   <title>Wortschatz — German flashcards</title>
   <style>
     :root { --ink:#18201d; --muted:#6e766f; --paper:#f6f2eb; --card:#fffdf9; --line:#ded9ce; --sage:#dce9d5; --green:#255c3d; --coral:#efc9b8; --red:#9b3c2e; --yellow:#f7df8b; }
@@ -15,8 +16,9 @@
     button { cursor:pointer; -webkit-tap-highlight-color:transparent; }
     .app { width:min(100%, 560px); min-height:100dvh; margin:auto; padding:max(24px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom)); display:flex; flex-direction:column; }
     header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-    .brand { font-size:21px; font-weight:800; letter-spacing:-.8px; }
+    .brand { display:flex; align-items:center; gap:9px; font-size:21px; font-weight:800; letter-spacing:-.8px; }
     .brand span { color:var(--green); }
+    .flag { width:27px; height:19px; border:1px solid #d8d1c4; border-radius:4px; background:linear-gradient(to bottom,#1c211f 0 33.33%,#d43c32 33.33% 66.66%,#f1c844 66.66%); box-shadow:0 1px 2px rgba(30,25,18,.12); }
     .icon-button { width:44px; height:44px; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--ink); font-size:26px; line-height:1; }
     .icon-button:active,.choice:active { transform:scale(.97); }
     .progress-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; color:var(--muted); font-size:14px; }
@@ -70,7 +72,7 @@
 </head>
 <body>
   <div class="app">
-    <header><div class="brand">Wort<span>schatz</span></div><button class="icon-button" id="addButton" aria-label="Add a word">+</button></header>
+    <header><div class="brand"><i class="flag" aria-hidden="true"></i><div>Wort<span>schatz</span></div></div><button class="icon-button" id="addButton" aria-label="Add a word">+</button></header>
     <main>
       <div id="studyView">
         <div class="progress-row"><span id="cardCount">0 cards to learn</span><strong id="progressText">0 / 10 known</strong></div>
